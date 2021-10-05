@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
           title:  Text('Welcome to Flutter'),
         ),
         body:  Center(
-          child: RandomWords(),
+          child: HelloText(),
       ),
       ),
     );
@@ -31,6 +31,34 @@ class _RandomWordsState extends State<RandomWords>
   Widget build(BuildContext context) {
     final wordPair = WordPair.random();
     return Text(wordPair.asPascalCase);
+  }
+}
+class HelloText extends StatefulWidget
+{
+  @override
+  State<StatefulWidget> createState() {
+    return HelloState();
+  }
+}
+class HelloState extends State<HelloText>
+{
+  String helloText ='';
+
+  final myController  =  TextEditingController();
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [TextField(
+        onChanged: (text)=> sayHello(text),
+        controller: myController,
+      ),Text(helloText)],
+    );
+  }
+
+  sayHello(String text) {
+    setState(() {
+      helloText = 'Hello'+ text.toUpperCase();
+    });
   }
 }
 
