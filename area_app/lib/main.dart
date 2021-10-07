@@ -25,14 +25,16 @@ class AreaCalculator extends StatefulWidget {
 
 class _AreaCalculatorState extends State<AreaCalculator> {
 
-  List<String> shapes =  ['Rectangle', 'Triangle'];
+  List<String> shapes =  ['Rectangle', 'Triangle','Circle'];
   String currentShape = '';
   String result='0';
   double width = 0;
   double height = 0;
+  double radius =  0;
 
   final TextEditingController widthController =TextEditingController();
   final TextEditingController heightController =TextEditingController();
+  final TextEditingController radiusController =TextEditingController();
 
   @override
   void initState() {
@@ -42,61 +44,77 @@ class _AreaCalculatorState extends State<AreaCalculator> {
     currentShape = 'Rectangle';
     widthController.addListener(updateWidth);
     heightController.addListener(updateHeight);
+    radiusController.addListener(updateRadius);
   }
   @override
   Widget build(BuildContext context) {
     return Container(
         margin:EdgeInsets.only(top:15.0),
-        child: Column(children: <Widget>[
-          //dropdown
-          DropdownButton<String>(
-              value:currentShape,
-              items:shapes.map((String value) {
-                return new DropdownMenuItem<String>(
-                  value:value,
-                  child: Text(value,
-                    style: TextStyle(fontSize: 24.0),),
-                );
-              }).toList(),
-              onChanged:(shape){
-                setState(() {
-                  currentShape = shape??'Rectangle';
-                });
-              }),
-          //width
-          AreaTextField(widthController, 'Width'),
-          //height
-          AreaTextField(heightController, 'Height'),
-          Container(
-            margin: EdgeInsets.all(15.0),
-            child:ElevatedButton(
-              child:Text('Calculate Area',
-                style: TextStyle(fontSize: 18.0),),
-              onPressed: calculateArea,
-            )
-            ,
+        child: SingleChildScrollView (
+          child: Column(children: <Widget>[
+            //dropdown
+            DropdownButton<String>(
+                value:currentShape,
+                items:shapes.map((String value) {
+                  return new DropdownMenuItem<String>(
+                    value:value,
+                    child: Text(value,
+                      style: TextStyle(fontSize: 24.0),),
+                  );
+                }).toList(),
+                onChanged:(shape){
+                  setState(() {
+                    currentShape = shape??'Rectangle';
+                  });
+                }),
+            //Shape
+            ShapeContainer(currentShape),
+            //width
+
+            currentShape == "Circle" ?  AreaTextField(heightController, 'Radius') :
+            Column(children: [AreaTextField(widthController, 'Width'),
+              //height
+              AreaTextField(heightController, 'Height')],) ,
+
+            Container(
+              margin: EdgeInsets.all(15.0),
+              child:ElevatedButton(
+                child:Text('Calculate Area',
+                  style: TextStyle(fontSize: 18.0),),
+                onPressed: calculateArea,
+              ),
+            ),
+            Text(result,
+              style: TextStyle(
+                fontSize: 24.0,
+                color: Colors.green[700],
+              ),
+            ),
+          ],
           ),
-          Text(result,
-            style: TextStyle(
-              fontSize: 24.0,
-              color: Colors.green[700],
-            ),),
-        ],)
+        )
     );
   }
 
   void calculateArea() {
     double area;
-
     if (currentShape == 'Rectangle') {
       area = width * height;
     }
     else if (currentShape == 'Triangle') {
       area = width * height / 2;
     }
-    else {
-      area = 0;
-    }
+    else if(currentShape == 'Circle')
+      {
+        print(radius);
+        print(" in area method");
+        area = 2 * 3.141 * radius;
+
+      }
+    else
+      {
+        area = 0;
+      }
     setState(() {
       result = 'The area is ' + area.toString();
     });
@@ -119,7 +137,19 @@ class _AreaCalculatorState extends State<AreaCalculator> {
         height = double.parse(heightController.text);
       }
       else {
+
         height = 0;
+      }
+    });
+
+  }
+  void updateRadius(){
+    setState(() {
+      if (radiusController.text != '') {
+        radius = double.parse(radiusController.text);
+      }
+      else {
+        radius = 0;
       }
     });
 
@@ -145,7 +175,7 @@ class AreaTextField extends StatelessWidget {
               fontSize: 24.0
           ),
           decoration: InputDecoration(
-            prefixIcon: Icon(Icons.border_all),
+            prefixIcon: hint=="Width"? Icon(Icons.border_top) : hint =="Height" ?Icon(Icons.border_vertical) :  Icon(Icons.circle)  ,
             filled: true,
             fillColor: Colors.grey[300],
             hintText: hint,
@@ -153,4 +183,89 @@ class AreaTextField extends StatelessWidget {
         )
     );
   }
+}
+
+class ShapeContainer extends StatelessWidget {
+  final String shape;
+
+  const ShapeContainer(this.shape)  ;
+  @override
+  Widget build(BuildContext context) {
+      if(shape=="Triangle")
+        {
+          return CustomPaint(
+            size:Size(100,100), 
+            painter:TrianglePainter(),
+          );
+        }
+      else if(shape=="Circle")
+        return CustomPaint(
+          size: Size(100,100),
+          painter:CirclePainter(),
+
+
+        );
+      return CustomPaint(
+        size: Size(100,100),
+        painter:RectanglePainter(),
+      );
+
+  }
+}
+
+class CirclePainter  extends CustomPainter
+{
+  @override
+  void paint(Canvas canvas, Size size)
+  {
+    final paint = Paint();
+    paint.color = Colors.purple;
+    canvas.drawCircle(Offset(size.width/2, size.height/2), 50, paint);
+
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+
+}
+
+class TrianglePainter extends CustomPainter
+{
+  @override
+  void paint(Canvas canvas, Size size)
+  {
+     Paint paint =  Paint();
+    paint.color = Colors.amber;
+    var path =  Path();
+    path.moveTo(size.width/2, 0);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0,size.height);
+    path.close();
+    canvas.drawPath(path,paint);
+  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate)
+  {
+    return true;
+  }
+}
+class RectanglePainter extends CustomPainter
+{
+  @override
+  void paint(Canvas canvas, Size size)
+  {
+    final paint = Paint();
+    paint.color = Colors.blueAccent;
+    Rect rect = Rect.fromLTRB(0, size.height/4, size.width, size.height/4*3);
+    canvas.drawRect(rect,paint);
+
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+
 }
